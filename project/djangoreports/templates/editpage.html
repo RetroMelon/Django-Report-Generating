@@ -11,7 +11,7 @@
       {{report_html}}
     </div>
 
-    <form id="report_content" action="/reports/render" method="post">
+    <form id="report_content" action="/reports/render" method="post" target="_blank">
       {% csrf_token %}
       <input type="text" id="returndata" name="data" value="" hidden>
       <input type="submit" id="submit" value="Submit">

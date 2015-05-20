@@ -1,9 +1,8 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.template import loader, RequestContext
-from django_xhtml2pdf.utils import generate_pdf
 from xhtml2pdf import pisa
-import StringIO, logging
+import StringIO, logging, os
 from project import settings
 
 logger = logging.getLogger(__name__)
@@ -26,11 +25,34 @@ def render_to_pdf(request):
         return HttpResponse('We had some errors')
 
 
+class UnsupportedMediaPathException(Exception):
+    pass
+
 def fetch_resources(uri, rel):
-    logger.debug("uri "+ uri)
-    print "media_root", settings.REPORT_STATICFILES_ROOT, "    media_url", settings.REPORT_STATICFILES_URL
-    path = os.path.join("s", uri.replace("a", ""))
-    print 'returning path', path
+    """
+    Callback to allow xhtml2pdf/reportlab to retrieve Images,Stylesheets, etc.
+    `uri` is the href attribute from the html link element.
+    `rel` gives a relative path, but it's not used here.
+    """
+    # if settings.MEDIA_URL and uri.startswith(settings.MEDIA_URL):
+    #      path = os.path.join(settings.MEDIA_ROOT,
+    #                          uri.replace(settings.MEDIA_URL, ""))
+    if settings.STATIC_URL and settings.STATICFILES_DIRS and uri.startswith(settings.STATIC_URL):
+        # path = os.path.join(settings.STATIC_ROOT,
+        #                     uri.replace(settings.STATIC_URL, ""))
+        # if not os.path.exists(path):
+        for d in settings.STATICFILES_DIRS:
+            path = os.path.join(d, uri.replace(settings.STATIC_URL, ""))
+            if os.path.exists(path):
+                break
+    elif uri.startswith("http://") or uri.startswith("https://"):
+        path = uri
+    else:
+        raise UnsupportedMediaPathException(
+                                'media urls must start with %s or %s' % (
+                                settings.MEDIA_URL, settings.STATIC_URL))
+
+    print path
     return path
 
 def generate_html(request, template_name, data):
