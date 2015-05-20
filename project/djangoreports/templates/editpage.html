@@ -1,0 +1,33 @@
+{% load staticfiles %}
+<html>
+  <head>
+    <title>Edit the page</title>
+    <link rel="stylesheet" href="{% static "css/medium-editor.css" %}"> <!-- Core -->
+    <link rel="stylesheet" href="{% static "css/themes/default.css" %}"> <!-- or any other theme -->
+  </head>
+  <body>
+
+    <div id="content" class="editable">
+      {{report_html}}
+    </div>
+
+    <form id="report_content" action="/reports/render" method="post">
+      {% csrf_token %}
+      <input type="text" id="returndata" name="data" value="" hidden>
+      <input type="submit" id="submit" value="Submit">
+
+    </form>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="{% static "js/medium-editor.js" %}"></script>
+    <script>
+      var elements = document.querySelectorAll('.editable'),
+      editor = new MediumEditor(elements);
+    </script>
+    <script>
+    $('#report_content').submit(function(e) {
+        $('#returndata').val($('#content').html());
+    });
+    </script>
+  </body>
+</html>
